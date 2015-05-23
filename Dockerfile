@@ -30,7 +30,7 @@ RUN DEBIAN_FRONTEND=noninteractive && \
   sed -e 's/^bind_address = .*$/bind_address = 0.0.0.0/' -i /usr/local/etc/couchdb/default.ini
 
 # CORS support in CouchDB
-RUN sed -i '/\[httpd\]/a enable_cors=true' /usr/local/etc/couchdb/local.ini && \
+RUN sed -i '/\[httpd\]/a enable_cors = true' /usr/local/etc/couchdb/local.ini && \
  echo '[cors] \
   \norigins = * \
   \ncredentials = true \
@@ -56,7 +56,16 @@ RUN touch /usr/local/scripts/couchdb-not-inited && \
   chmod -R 0770 /usr/local/var/log/couchdb && \
   chmod -R 0770 /usr/local/var/run/couchdb
 
-RUN apt-get clean && \
+RUN apt-get purge -y \
+    binutils \
+    build-essential \
+    cpp \
+    make \
+    libcurl4-openssl-dev \
+    libnspr4-dev \
+    perl && \
+  apt-get autoremove -y && \
+  apt-get clean && \
   rm -rf /var/lib/apt/lists/* /var/tmp/* /usr/src/apache*
 
 USER couchdb
