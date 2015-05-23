@@ -6,25 +6,23 @@ ENV COUCHDB_VERSION 1.6.1
 
 # CouchDB dependencies and required utilities
 RUN DEBIAN_FRONTEND=noninteractive && \
-  apt-get update -y && \
-  apt-get install -y --force-yes --no-install-recommends \
+  apt-get update && apt-get install -y --force-yes --no-install-recommends \
     build-essential \
-    pwgen \
-    netcat \
-    wget \
     curl \
     erlang-dev \
     erlang-nox \
+    libcurl4-openssl-dev \
+    libicu-dev \
     libmozjs185-1.0 \
     libmozjs185-dev \
-    libcurl4-openssl-dev \
-    libicu-dev
+    netcat \
+    pwgen
 
 # CouchDB installation from source
 RUN DEBIAN_FRONTEND=noninteractive && \
   cd /usr/src && \
-  wget -nv http://mirror.ox.ac.uk/sites/rsync.apache.org/couchdb/source/$COUCHDB_VERSION/apache-couchdb-$COUCHDB_VERSION.tar.gz && \
-  tar -xzf apache-couchdb-$COUCHDB_VERSION.tar.gz && \
+  curl -s -o apache-couchdb.tar.gz http://mirror.ox.ac.uk/sites/rsync.apache.org/couchdb/source/$COUCHDB_VERSION/apache-couchdb-$COUCHDB_VERSION.tar.gz && \
+  tar -xzf apache-couchdb.tar.gz && \
   cd /usr/src/apache-couchdb-$COUCHDB_VERSION && \
   ./configure && \
   make --quiet && \
