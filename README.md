@@ -1,21 +1,27 @@
 # CouchDB Dockerfile
 
-A Dockerfile that produces a Docker Image for [Apache CouchDB](http://couchdb.apache.org/).
+A Dockerfile that produces a Docker image for [Apache CouchDB](http://couchdb.apache.org/).
+
+It is based on the [Ferran Rodenas's version](https://github.com/frodenas/docker-couchdb) but includes the following changes and improvements:
+
+  - adds sample CORS configuration to CouchDB,
+  - runs everything as user `couchdb`,
+  - uses the most recent version of CouchDB (1.6.1 instead of 1.6),
+  - is based on Debian Wheezy (instead of Ubuntu),
+  - its Docker image is smaller.
 
 ## CouchDB version
 
-The `master` branch currently hosts CouchDB 1.6.
-
-Different versions of CouchDB are located at the github repo [branches](https://github.com/frodenas/docker-couchdb/branches).
+The `master` branch currently hosts CouchDB 1.6.1.
 
 ## Usage
 
 ### Build the image
 
-To create the image `frodenas/couchdb`, execute the following command on the `docker-couchdb` folder:
+To create the image `kobretti/couchdb-with-cors`, execute the following command on the `docker-couchdb` directory:
 
 ```
-$ docker build -t frodenas/couchdb .
+$ docker build -t kobretti/couchdb-with-cors .
 ```
 
 ### Run the image
@@ -23,7 +29,7 @@ $ docker build -t frodenas/couchdb .
 To run the image and bind to host port 5984:
 
 ```
-$ docker run -d --name couchdb -p 5984:5984 frodenas/couchdb
+$ docker run -d --name couchdb -p 5984:5984 kobretti/couchdb-with-cors
 ```
 
 The first time you run your container, a new user `couchdb` with all privileges will be created with a random password.
@@ -36,10 +42,10 @@ docker logs <CONTAINER_ID>
 You will see an output like the following:
 
 ```
-========================================================================
+========================================================
 CouchDB User: "couchdb"
 CouchDB Password: "jPp5fBJySeuJPTN8
-========================================================================
+========================================================
 ```
 
 #### Credentials
@@ -57,7 +63,7 @@ $ docker run -d \
     -p 5984:5984 \
     -e COUCHDB_USERNAME=myusername \
     -e COUCHDB_PASSWORD=mypassword \
-    frodenas/couchdb
+    kobretti/couchdb-with-cors
 ```
 
 #### Databases
@@ -75,23 +81,22 @@ $ docker run -d \
     -e COUCHDB_USERNAME=myusername \
     -e COUCHDB_PASSWORD=mypassword \
     -e COUCHDB_DBNAME=mydb \
-    frodenas/couchdb
+    kobretti/couchdb-with-cors
 ```
 
 #### Persistent data
 
-The CouchDB server is configured to store data in the `/data` directory inside the container. You can map the
-container's `/data` volume to a volume on the host so the data becomes independent of the running container:
+The CouchDB server is configured to store data in the `/usr/local/var/lib/couchdb/` directory inside the container. You can map this path to a volume on the host so the data becomes independent of the running container:
 
 ```
 $ mkdir -p /tmp/couchdb
 $ docker run -d \
     --name couchdb \
     -p 5984:5984 \
-    -v /tmp/couchdb:/data \
-    frodenas/couchdb
+    -v /tmp/couchdb:/usr/local/var/lib/couchdb \
+    kobretti/couchdb-with-cors
 ```
 
 ## Copyright
 
-Copyright (c) 2014 Ferran Rodenas. See [LICENSE](https://github.com/frodenas/docker-couchdb/blob/master/LICENSE) for details.
+Copyright (c) 2014 Ferran Rodenas. See [LICENCE](https://github.com/frodenas/docker-couchdb/blob/master/LICENSE) for details.

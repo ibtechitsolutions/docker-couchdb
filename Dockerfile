@@ -1,43 +1,74 @@
-FROM frodenas/ubuntu
-MAINTAINER Ferran Rodenas <frodenas@gmail.com>
+FROM debian:wheezy
 
-# Install and configure CouchDB 1.6.0
+MAINTAINER Krzysztof Kobrzak <chris.kobrzak@gmail.com>
+
+ENV COUCHDB_VERSION 1.6.1
+
+# CouchDB dependencies and required utilities
 RUN DEBIAN_FRONTEND=noninteractive && \
-    apt-get install -y --force-yes \
+  apt-get update -y && \
+  apt-get install -y --force-yes --no-install-recommends \
+    build-essential \
+    pwgen \
+    netcat \
+    wget \
+    curl \
     erlang-dev \
-    erlang-manpages \
-    erlang-base-hipe \
-    erlang-eunit \
     erlang-nox \
-    erlang-xmerl \
-    erlang-inets \
+    libmozjs185-1.0 \
     libmozjs185-dev \
-    libicu-dev \
-    libcurl4-gnutls-dev \
-    libtool && \
-    cd /tmp && \
-    wget http://mirror.sdunix.com/apache/couchdb/source/1.6.0/apache-couchdb-1.6.0.tar.gz && \
-    tar xzvf apache-couchdb-1.6.0.tar.gz && \
-    cd apache-couchdb-1.6.0 && \
-    ./configure && \
-    make && \
-    make install && \
-    sed -e 's/^bind_address = .*$/bind_address = 0.0.0.0/' -i /usr/local/etc/couchdb/default.ini && \
-    sed -e 's/^database_dir = .*$/database_dir = \/data/' -i /usr/local/etc/couchdb/default.ini && \
-    sed -e 's/^view_index_dir = .*$/view_index_dir = \/data/' -i /usr/local/etc/couchdb/default.ini && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    libcurl4-openssl-dev \
+    libicu-dev
 
-# Add scripts
-ADD scripts /scripts
-RUN chmod +x /scripts/*.sh
-RUN touch /.firstrun
+# CouchDB installation from source
+RUN DEBIAN_FRONTEND=noninteractive && \
+  cd /usr/src && \
+  wget -nv http://mirror.ox.ac.uk/sites/rsync.apache.org/couchdb/source/$COUCHDB_VERSION/apache-couchdb-$COUCHDB_VERSION.tar.gz && \
+  tar -xzf apache-couchdb-$COUCHDB_VERSION.tar.gz && \
+  cd /usr/src/apache-couchdb-$COUCHDB_VERSION && \
+  ./configure && \
+  make --quiet && \
+  make install && \
+  sed -e 's/^bind_address = .*$/bind_address = 0.0.0.0/' -i /usr/local/etc/couchdb/default.ini
 
-# Command to run
-ENTRYPOINT ["/scripts/run.sh"]
+# CORS support in CouchDB
+RUN sed -i '/\[httpd\]/a enable_cors=true' /usr/local/etc/couchdb/local.ini && \
+ echo '[cors] \
+  \norigins = * \
+  \ncredentials = true \
+  \nheaders = accept, authorization, content-type, origin, referer \
+  \nmethods = GET, PUT, POST, HEAD' >> /usr/local/etc/couchdb/local.ini
+
+RUN groupadd -r couchdb && \
+  useradd -d /usr/local/var/lib/couchdb -g couchdb couchdb
+
+ADD scripts /usr/local/scripts
+
+RUN touch /usr/local/scripts/couchdb-not-inited && \
+  chmod +x /usr/local/scripts/*.sh && \
+  chown -R couchdb:couchdb /usr/local/scripts && \
+  mkdir /var/lib/couchdb && \
+  chown -R couchdb:couchdb /var/lib/couchdb && \
+  chown -R couchdb:couchdb /usr/local/etc/couchdb && \
+  chown -R couchdb:couchdb /usr/local/var/lib/couchdb && \
+  chown -R couchdb:couchdb /usr/local/var/log/couchdb && \
+  chown -R couchdb:couchdb /usr/local/var/run/couchdb && \
+  chmod -R 0770 /usr/local/etc/couchdb && \
+  chmod -R 0770 /usr/local/var/lib/couchdb && \
+  chmod -R 0770 /usr/local/var/log/couchdb && \
+  chmod -R 0770 /usr/local/var/run/couchdb
+
+RUN apt-get clean && \
+  rm -rf /var/lib/apt/lists/* /var/tmp/* /usr/src/apache*
+
+USER couchdb
+
+ENTRYPOINT ["/usr/local/scripts/start_couchdb.sh"]
 CMD [""]
 
-# Expose listen port
 EXPOSE 5984
 
+WORKDIR /usr/local/scripts
+
 # Expose our data, logs and configuration volumes
-VOLUME ["/data", "/usr/local/var/log/couchdb", "/usr/local/etc/couchdb"]
+VOLUME ["/usr/local/var/lib/couchdb", "/usr/local/var/log/couchdb", "/usr/local/etc/couchdb"]
