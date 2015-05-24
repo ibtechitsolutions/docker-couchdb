@@ -44,7 +44,7 @@ You will see an output like the following:
 ```
 ========================================================
 CouchDB User: "couchdb"
-CouchDB Password: "jPp5fBJySeuJPTN8
+CouchDB Password: "jPp5fBJySeuJPTN8"
 ========================================================
 ```
 
@@ -99,4 +99,4 @@ $ docker run -d \
 
 ## Copyright
 
-Copyright (c) 2014 Ferran Rodenas. See [LICENCE](https://github.com/frodenas/docker-couchdb/blob/master/LICENSE) for details.
+Copyright (c) 2014 Ferran Rodenas, 2015 Krzysztof Kobrzak.  See [LICENCE](https://github.com/chris-kobrzak/docker-couchdb/blob/master/LICENCE) for details.
