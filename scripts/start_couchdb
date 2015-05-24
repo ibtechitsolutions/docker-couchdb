@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+if [[ -e /var/lib/couchdb/couchdb-not-inited ]]; then
+  echo "Initialising CouchDB..."
+  initialise_couchdb
+fi
+
+echo "Starting CouchDB..."
+/usr/local/bin/couchdb

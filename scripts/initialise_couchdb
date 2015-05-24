@@ -28,4 +28,4 @@ if [ ! -z "$DB" ]; then
 fi
 echo "========================================================"
 
-rm -f /usr/local/scripts/couchdb-not-inited
+rm -f /var/lib/couchdb/couchdb-not-inited
