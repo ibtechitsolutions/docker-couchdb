@@ -18,10 +18,10 @@ The `master` branch currently hosts CouchDB 1.6.1.
 
 ### Build the image
 
-To create the image `kobretti/couchdb-with-cors`, execute the following command on the `docker-couchdb` directory:
+To create the image `kobretti/couchdb-cors`, execute the following command on the `docker-couchdb` directory:
 
 ```
-$ docker build -t kobretti/couchdb-with-cors .
+$ docker build -t kobretti/couchdb-cors .
 ```
 
 ### Run the image
@@ -29,7 +29,7 @@ $ docker build -t kobretti/couchdb-with-cors .
 To run the image and bind to host port 5984:
 
 ```
-$ docker run -d --name couchdb -p 5984:5984 kobretti/couchdb-with-cors
+$ docker run -d --name couchdb -p 5984:5984 kobretti/couchdb-cors
 ```
 
 The first time you run your container, a new user `couchdb` with all privileges will be created with a random password.
@@ -63,7 +63,7 @@ $ docker run -d \
     -p 5984:5984 \
     -e COUCHDB_USERNAME=myusername \
     -e COUCHDB_PASSWORD=mypassword \
-    kobretti/couchdb-with-cors
+    kobretti/couchdb-cors
 ```
 
 #### Databases
@@ -81,7 +81,7 @@ $ docker run -d \
     -e COUCHDB_USERNAME=myusername \
     -e COUCHDB_PASSWORD=mypassword \
     -e COUCHDB_DBNAME=mydb \
-    kobretti/couchdb-with-cors
+    kobretti/couchdb-cors
 ```
 
 #### Persistent data
@@ -94,7 +94,7 @@ $ docker run -d \
     --name couchdb \
     -p 5984:5984 \
     -v /tmp/couchdb:/usr/local/var/lib/couchdb \
-    kobretti/couchdb-with-cors
+    kobretti/couchdb-cors
 ```
 
 ## Copyright
