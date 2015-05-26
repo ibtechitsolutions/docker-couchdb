@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 
-if [[ -e /var/lib/couchdb/couchdb-not-inited ]]; then
+couchDbInitIndicator=/var/lib/couchdb/couchdb-not-inited
+
+if [[ -e $couchDbInitIndicator ]]; then
   echo "Initialising CouchDB..."
   initialise_couchdb
+  rm -f $couchDbInitIndicator
 fi
 
 echo "Starting CouchDB..."

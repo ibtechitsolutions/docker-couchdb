@@ -1,31 +1,81 @@
 #!/usr/bin/env bash
 
-USER=${COUCHDB_USERNAME:-couchdb}
-PASS=${COUCHDB_PASSWORD:-$(pwgen -s -1 16)}
+USER=${COUCHDB_USERNAME:-}
+PASS=${COUCHDB_PASSWORD:-}
 DB=${COUCHDB_DBNAME:-}
 
-# Start CouchDB service
-/usr/local/bin/couchdb -b
+IP_ADDRESS=127.0.0.1
+PORT=5984
 
-while ! nc -vz localhost 5984; do sleep 1; done
+startCouchDbInBackground() {
+  /usr/local/bin/couchdb -b
+}
 
-echo "Creating user: \"$USER\"..."
-curl -X PUT http://127.0.0.1:5984/_config/admins/$USER -d '"'${PASS}'"'
+stopCouchDb() {
+  /usr/local/bin/couchdb -d
+}
 
-if [ ! -z "$DB" ]; then
-    echo "Creating database: \"$DB\"..."
-    curl -X PUT http://$USER:$PASS@127.0.0.1:5984/$DB
+isCouchDbRunnning() {
+  numericRegEx="^[0-9]+$"
+  if [ -n $1 ] && [[ $1 =~ $numericRegEx ]]; then
+    port=$1
+  else
+    port=$PORT
+  fi
+  nc -z $IP_ADDRESS $port
+  return $?
+}
+
+waitForCouchDb() {
+  while ! isCouchDbRunnning $1; do
+    sleep 1;
+  done
+}
+
+createCouchDbUser() {
+  curl -X PUT http://$IP_ADDRESS:$PORT/_config/admins/$USER -d '"'${PASS}'"'
+}
+
+createCouchDbDatabase() {
+  curl -X PUT http://$USER:$PASS@$IP_ADDRESS:$PORT/$DB
+}
+
+createCouchDbDatabaseWithoutCredentials() {
+  curl -X PUT http://$IP_ADDRESS:$PORT/$DB
+}
+
+setGeneratedPassword() {
+  PASS=$(pwgen -s -1 16)
+}
+
+startCouchDbInBackground
+
+waitForCouchDb
+
+if [ -n "$USER" ]; then
+  if [ -z "$PASS" ]; then
+    setGeneratedPassword
+  fi
+  echo "Creating user: \"$USER\"..."
+  createCouchDbUser
 fi
 
-# Stop CouchDB service
-/usr/local/bin/couchdb -d
-
-echo "========================================================"
-echo "CouchDB User: \"$USER\""
-echo "CouchDB Password: \"$PASS\""
-if [ ! -z "$DB" ]; then
-    echo "CouchDB Database: \"$DB\""
+if [ -n "$DB" ]; then
+  echo "Creating database: \"$DB\"..."
+  if [ -n "$USER" ]; then
+    createCouchDbDatabase
+  else
+    createCouchDbDatabaseWithoutCredentials
+  fi
 fi
-echo "========================================================"
 
-rm -f /var/lib/couchdb/couchdb-not-inited
+stopCouchDb
+
+if [ -n "$USER" ]; then
+  echo "========================================================"
+  echo "CouchDB User: \"$USER\""
+  echo "CouchDB Password: \"$PASS\""
+  echo "========================================================"
+fi
+
+exit 0
