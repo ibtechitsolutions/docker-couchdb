@@ -11,6 +11,7 @@ RUN \
   apt-get install -y --force-yes --no-install-recommends \
     build-essential \
     curl \
+    # klaemo: Erlang downloaded from Erlang Solutions
     erlang-dev \
     erlang-nox \
     libcurl4-openssl-dev \
@@ -20,6 +21,7 @@ RUN \
     netcat \
     pwgen
 
+# Use COPY instead
 ADD scripts /usr/local/bin
 
 RUN \
@@ -32,9 +34,12 @@ RUN \
 RUN \
   DEBIAN_FRONTEND=noninteractive && \
   cd /usr/src && \
+  # klaemo: also download .asc and KEYS and verify the package via `gpg`
   curl -s -o apache-couchdb.tar.gz http://mirror.ox.ac.uk/sites/rsync.apache.org/couchdb/source/$COUCHDB_VERSION/apache-couchdb-$COUCHDB_VERSION.tar.gz && \
+  # klaemo: --strip-components=1
   tar -xzf apache-couchdb.tar.gz && \
   cd /usr/src/apache-couchdb-$COUCHDB_VERSION && \
+  # klaemo: --with-js-lib=/usr/lib --with-js-include=/usr/include/mozjs \
   ./configure && \
   make --quiet && \
   make install
@@ -52,11 +57,13 @@ RUN \
 RUN \
   mkdir /var/lib/couchdb && \
   touch /var/lib/couchdb/couchdb-not-inited && \
+  # klaemo: DRY chown below
   chown -R couchdb:couchdb /var/lib/couchdb && \
   chown -R couchdb:couchdb /usr/local/etc/couchdb && \
   chown -R couchdb:couchdb /usr/local/var/lib/couchdb && \
   chown -R couchdb:couchdb /usr/local/var/log/couchdb && \
   chown -R couchdb:couchdb /usr/local/var/run/couchdb && \
+  # klaemo: DRY chmod below
   chmod -R 0770 /usr/local/etc/couchdb && \
   chmod -R 0770 /usr/local/var/lib/couchdb && \
   chmod -R 0770 /usr/local/var/log/couchdb && \
