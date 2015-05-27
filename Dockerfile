@@ -57,17 +57,18 @@ RUN \
 RUN \
   mkdir /var/lib/couchdb && \
   touch /var/lib/couchdb/couchdb-not-inited && \
-  # klaemo: DRY chown below
-  chown -R couchdb:couchdb /var/lib/couchdb && \
-  chown -R couchdb:couchdb /usr/local/etc/couchdb && \
-  chown -R couchdb:couchdb /usr/local/var/lib/couchdb && \
-  chown -R couchdb:couchdb /usr/local/var/log/couchdb && \
-  chown -R couchdb:couchdb /usr/local/var/run/couchdb && \
+  chown -R couchdb:couchdb \
+    /var/lib/couchdb \
+    /usr/local/etc/couchdb \
+    /usr/local/var/lib/couchdb \
+    /usr/local/var/log/couchdb \
+    /usr/local/var/run/couchdb && \
   # klaemo: DRY chmod below
-  chmod -R 0770 /usr/local/etc/couchdb && \
-  chmod -R 0770 /usr/local/var/lib/couchdb && \
-  chmod -R 0770 /usr/local/var/log/couchdb && \
-  chmod -R 0770 /usr/local/var/run/couchdb
+  chmod -R 0770 \
+    /usr/local/etc/couchdb \
+    /usr/local/var/lib/couchdb \
+    /usr/local/var/log/couchdb \
+    /usr/local/var/run/couchdb
 
 RUN \
   apt-get purge -y \
