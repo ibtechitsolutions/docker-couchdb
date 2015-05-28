@@ -4,45 +4,55 @@ MAINTAINER Krzysztof Kobrzak <chris.kobrzak@gmail.com>
 
 ENV COUCHDB_VERSION 1.6.1
 
-# CouchDB dependencies and required utilities
+COPY scripts /usr/local/bin
+
+RUN \
+  groupadd -r couchdb && \
+  useradd -m -d /var/lib/couchdb -g couchdb couchdb && \
+  chown -R couchdb:couchdb /usr/local/bin/* && \
+  chmod -R +x /usr/local/bin/*
+
+# CouchDB dependencies, installation from source, required utilities etc.
 RUN \
   apt-get update && \
   DEBIAN_FRONTEND=noninteractive && \
-  apt-get install -y --force-yes --no-install-recommends \
+  apt-get install -y --no-install-recommends \
     build-essential \
+    ca-certificates \
     curl \
-    # klaemo: Erlang downloaded from Erlang Solutions
-    erlang-dev \
-    erlang-nox \
     libcurl4-openssl-dev \
     libicu-dev \
     libmozjs185-1.0 \
     libmozjs185-dev \
     netcat \
-    pwgen
-
-# Use COPY instead
-ADD scripts /usr/local/bin
-
-RUN \
-  groupadd -r couchdb && \
-  useradd -d /usr/local/var/lib/couchdb -g couchdb couchdb && \
-  chown -R couchdb:couchdb /usr/local/bin/* && \
-  chmod -R +x /usr/local/bin/*
-
-# CouchDB installation from source
-RUN \
-  DEBIAN_FRONTEND=noninteractive && \
+    pwgen && \
+  curl -o esl.deb -sSL https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb && \
+  dpkg -i esl.deb && \
+  apt-get update && \
+  apt-get install -y --no-install-recommends \
+    erlang-nox=1:17.5.3 \
+    erlang-dev=1:17.5.3 && \
   cd /usr/src && \
-  # klaemo: also download .asc and KEYS and verify the package via `gpg`
   curl -s -o apache-couchdb.tar.gz http://mirror.ox.ac.uk/sites/rsync.apache.org/couchdb/source/$COUCHDB_VERSION/apache-couchdb-$COUCHDB_VERSION.tar.gz && \
-  # klaemo: --strip-components=1
   tar -xzf apache-couchdb.tar.gz && \
   cd /usr/src/apache-couchdb-$COUCHDB_VERSION && \
-  # klaemo: --with-js-lib=/usr/lib --with-js-include=/usr/include/mozjs \
-  ./configure && \
+  ./configure --with-js-lib=/usr/lib --with-js-include=/usr/include/mozjs && \
   make --quiet && \
-  make install
+  make install && \
+  apt-get purge -y \
+    binutils \
+    build-essential \
+    cpp \
+    libcurl4-openssl-dev \
+    libnspr4-dev \
+    make \
+    perl && \
+  apt-get autoremove -y && \
+  apt-get clean && \
+  rm -rf /esl.deb \
+    /usr/src/apache* \
+    /var/lib/apt/lists/* \
+    /var/tmp/*
 
 RUN \
   sed -e 's/^bind_address = .*$/bind_address = 0.0.0.0/' -i /usr/local/etc/couchdb/default.ini && \
@@ -55,42 +65,27 @@ RUN \
    \nmethods = GET, PUT, POST, HEAD, DELETE' >> /usr/local/etc/couchdb/local.ini
 
 RUN \
-  mkdir /var/lib/couchdb && \
   touch /var/lib/couchdb/couchdb-not-inited && \
   chown -R couchdb:couchdb \
-    /var/lib/couchdb \
     /usr/local/etc/couchdb \
+    /usr/local/lib/couchdb \
     /usr/local/var/lib/couchdb \
     /usr/local/var/log/couchdb \
     /usr/local/var/run/couchdb && \
-  # klaemo: DRY chmod below
   chmod -R 0770 \
     /usr/local/etc/couchdb \
     /usr/local/var/lib/couchdb \
     /usr/local/var/log/couchdb \
     /usr/local/var/run/couchdb
 
-RUN \
-  apt-get purge -y \
-    binutils \
-    build-essential \
-    cpp \
-    make \
-    libcurl4-openssl-dev \
-    libnspr4-dev \
-    perl && \
-  apt-get autoremove -y && \
-  apt-get clean && \
-  rm -rf /var/lib/apt/lists/* /var/tmp/* /usr/src/apache*
-
 USER couchdb
-
-ENTRYPOINT ["start_couchdb"]
-CMD [""]
 
 EXPOSE 5984
 
-WORKDIR /usr/local/var/lib/couchdb
+WORKDIR /var/lib/couchdb
 
 # Expose our data, logs and configuration volumes
-VOLUME ["/usr/local/var/lib/couchdb", "/usr/local/var/log/couchdb", "/usr/local/etc/couchdb"]
+VOLUME ["/var/lib/couchdb", "/usr/local/var/log/couchdb", "/usr/local/etc/couchdb"]
+
+ENTRYPOINT ["start_couchdb"]
+CMD [""]
