@@ -1,31 +1,42 @@
 #!/usr/bin/env bash
 
-USER=${COUCHDB_USERNAME:-couchdb}
-PASS=${COUCHDB_PASSWORD:-$(pwgen -s -1 16)}
+USER=${COUCHDB_USERNAME:-}
+PASS=${COUCHDB_PASSWORD:-}
 DB=${COUCHDB_DBNAME:-}
 
-# Start CouchDB service
-/usr/local/bin/couchdb -b
+IP_ADDRESS=127.0.0.1
+PORT=5984
 
-while ! nc -vz localhost 5984; do sleep 1; done
+source ./couchdb_gateway.sh
 
-echo "Creating user: \"$USER\"..."
-curl -X PUT http://127.0.0.1:5984/_config/admins/$USER -d '"'${PASS}'"'
+startCouchDbInBackground
 
-if [ ! -z "$DB" ]; then
-    echo "Creating database: \"$DB\"..."
-    curl -X PUT http://$USER:$PASS@127.0.0.1:5984/$DB
+waitForCouchDb
+
+if [ -n "$USER" ]; then
+  if [ -z "$PASS" ]; then
+    setGeneratedPassword
+  fi
+  echo "Creating user: \"$USER\"..."
+  createCouchDbUser
 fi
 
-# Stop CouchDB service
-/usr/local/bin/couchdb -d
-
-echo "========================================================"
-echo "CouchDB User: \"$USER\""
-echo "CouchDB Password: \"$PASS\""
-if [ ! -z "$DB" ]; then
-    echo "CouchDB Database: \"$DB\""
+if [ -n "$DB" ]; then
+  echo "Creating database: \"$DB\"..."
+  if [ -n "$USER" ]; then
+    createCouchDbDatabase
+  else
+    createCouchDbDatabaseWithoutCredentials
+  fi
 fi
-echo "========================================================"
 
-rm -f /var/lib/couchdb/couchdb-not-inited
+stopCouchDb
+
+if [ -n "$USER" ]; then
+  echo "========================================================"
+  echo "CouchDB User: \"$USER\""
+  echo "CouchDB Password: \"$PASS\""
+  echo "========================================================"
+fi
+
+exit 0
