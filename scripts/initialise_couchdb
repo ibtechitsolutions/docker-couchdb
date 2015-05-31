@@ -7,7 +7,7 @@ DB=${COUCHDB_DBNAME:-}
 IP_ADDRESS=127.0.0.1
 PORT=5984
 
-source ./couchdb_gateway.sh
+source `which couchdb_gateway.sh`
 
 startCouchDbInBackground
 

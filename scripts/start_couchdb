@@ -10,3 +10,5 @@ fi
 
 echo "Starting CouchDB..."
 /usr/local/bin/couchdb
+
+exit 0
