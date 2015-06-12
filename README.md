@@ -9,7 +9,8 @@ but includes the following changes and improvements:
   - runs everything as user `couchdb`,
   - uses CouchDB 1.6.1,
   - is based on Debian Wheezy,
-  - its Docker image is smaller.
+  - its Docker image is smaller,
+  - includes an ARMv7 port that can be used on RaspberryPi 2 (`armhf` branch).
 
 ## CouchDB version
 
