@@ -6,5 +6,3 @@ RUN usermod -u 10100 couchdb \
  && groupmod -g 10100 couchdb \
  && sed -i 's/\[httpd\]/\[httpd\]\nenable_cors = true/g' /usr/local/etc/couchdb/local.ini \
  && printf "[cors]\norigins = *\n" >> /usr/local/etc/couchdb/local.ini
-
-USER couchdb
